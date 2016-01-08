@@ -26,11 +26,55 @@
      <all-permissions/>
   </security>
 #end
-  <resources>
-    <j2se version="$j2seVersion"/>
-     $dependencies
-     $extensions
-  </resources>
+	<resources>
+	    <j2se version="$j2seVersion"/>
+	    #foreach( $dependency in $fulldependencies )
+			#if ( !$dependency.classifier )
+				<jar href="${dependency.artifactId}-${dependency.version}.jar" />
+			#end
+		#end
+	</resources>
+	<resources os="Windows">
+		#foreach( $dependency in $fulldependencies )
+			#if ( $dependency.classifier == 'natives-win' )
+				<nativelib href="${dependency.artifactId}-${dependency.version}-${dependency.classifier}.jar" />
+			#end
+		#end
+	</resources>
+	<resources os="Windows" arch="x86">
+		#foreach( $dependency in $fulldependencies )
+			#if ( $dependency.classifier == 'natives-win-x86' )
+				<nativelib href="${dependency.artifactId}-${dependency.version}-${dependency.classifier}.jar" />
+			#end
+		#end
+	</resources>
+	<resources os="Windows" arch="amd64">
+		#foreach( $dependency in $fulldependencies )
+			#if ( $dependency.classifier == 'natives-win-amd64' )
+				<nativelib href="${dependency.artifactId}-${dependency.version}-${dependency.classifier}.jar" />
+			#end
+		#end
+	</resources>
+	<resources os="Linux">
+		#foreach( $dependency in $fulldependencies )
+			#if ( $dependency.classifier == 'natives-linux' )
+				<nativelib href="${dependency.artifactId}-${dependency.version}-${dependency.classifier}.jar" />
+			#end
+		#end
+	</resources>
+	<resources os="Linux" arch="x86">
+		#foreach( $dependency in $fulldependencies )
+			#if ( $dependency.classifier == 'natives-linux-x86' )
+				<nativelib href="${dependency.artifactId}-${dependency.version}-${dependency.classifier}.jar" />
+			#end
+		#end
+	</resources>
+	<resources os="Linux" arch="amd64">
+		#foreach( $dependency in $fulldependencies )
+			#if ( $dependency.classifier == 'natives-linux-amd64' )
+				<nativelib href="${dependency.artifactId}-${dependency.version}-${dependency.classifier}.jar" />
+			#end
+		#end
+	</resources>
   <application-desc main-class="$mainClass"/>
 </jnlp>
-

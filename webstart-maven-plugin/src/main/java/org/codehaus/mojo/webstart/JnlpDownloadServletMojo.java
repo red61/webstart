@@ -90,7 +90,7 @@ public class JnlpDownloadServletMojo
      * @parameter
      * @required
      */
-    private List/*JnlpFile*/ jnlpFiles;
+    private List<JnlpFile> jnlpFiles;
 
     /**
      * The configurable collection of jars that are common to all jnlpFile elements declared in
@@ -101,7 +101,12 @@ public class JnlpDownloadServletMojo
      * @parameter
      */
     private List/*JarResource*/ commonJarResources;
-
+    
+    /**
+     * Sets the default j2seVersion unless set per jnlpFile
+     */
+    private String j2seVersion = "1.5+";
+    
     /**
      * {@inheritDoc}
      */
@@ -138,6 +143,9 @@ public class JnlpDownloadServletMojo
         {
             JnlpFile jnlpFile = (JnlpFile) itr.next();
             retrieveJarResources( jnlpFile.getJarResources() );
+            if(jnlpFile.getNativeDependencies() != null){
+                retrieveNativeDependencies(jnlpFile.getNativeDependencies());
+            }
         }
 
         signOrRenameJars();
@@ -153,7 +161,16 @@ public class JnlpDownloadServletMojo
 
     }
 
-    /**
+	private void retrieveNativeDependencies(List<NativeDependency> nativeDependencies)
+			throws MojoExecutionException {
+		for (final Iterator itr = nativeDependencies.iterator(); itr.hasNext();) {
+			final NativeDependency nativeDependency = (NativeDependency) itr.next();
+            // FIXME: add the jars needed for the native stuff, but these might be non-native
+			retrieveNativeResources(nativeDependency.getNativeResources());
+		}
+	}
+
+	/**
      * Confirms that all plugin configuration provided by the user
      * in the pom.xml file is valid.
      *
@@ -404,7 +421,7 @@ public class JnlpDownloadServletMojo
      * <p/>
      * Transitive dependencies are added to the list specified as parameter. TODO fix that.
      *
-     * @param jarResources list of jar resources to retrieve
+     * @param jnlpResources list of jar resources to retrieve
      * @throws MojoExecutionException if something bas occurs while retrieving resources
      */
     private void retrieveJarResources( List jarResources )
@@ -423,7 +440,9 @@ public class JnlpDownloadServletMojo
                 Artifact artifact = createArtifact( jarResource );
                 getArtifactResolver().resolve( artifact, getRemoteRepositories(), getLocalRepository() );
                 jarResource.setArtifact( artifact );
-                checkForMainClass( jarResource );
+                if(jarResource instanceof JarResource ){
+                	checkForMainClass( (JarResource)jarResource );
+                }
                 jarResourceArtifacts.add( artifact );
             }
 
@@ -451,7 +470,7 @@ public class JnlpDownloadServletMojo
                     getModifiedJnlpArtifacts().add( name.substring( 0, name.lastIndexOf( '.' ) ) );
                 }
 
-                if ( jarResource.isOutputJarVersion() )
+                if ( jarResource.isOutputVersion() )
                 {
                     // Create and set a version-less href for this jarResource 
                     String hrefValue = buildHrefValue( artifact );
@@ -475,26 +494,89 @@ public class JnlpDownloadServletMojo
 
     }
 
+    private void retrieveNativeResources( List<NativeResource> nativeResources )
+        throws MojoExecutionException
+    {
+
+        Set jarResourceArtifacts = new HashSet();
+
+        try
+        {
+            //for each configured JarResource, create and resolve the corresponding artifact and 
+            //check it for the mainClass if specified
+            for (NativeResource nativeResource : nativeResources) {
+                final Artifact artifact = createArtifact( nativeResource );
+                getArtifactResolver().resolve( artifact, getRemoteRepositories(), getLocalRepository() );
+                nativeResource.setArtifact( artifact );
+                jarResourceArtifacts.add( artifact );
+            }
+
+            if ( !isExcludeTransitive() )
+            {
+                // FIXME: pulls in jars I don't want. I want native only
+                // retrieveTransitiveDependencies( jarResourceArtifacts, nativeResources );
+            }
+
+            //for each JarResource, copy its artifact to the lib directory if necessary
+            for (NativeResource nativeResource : nativeResources) {
+                Artifact artifact = nativeResource.getArtifact();
+                boolean copied = copyJarAsUnprocessedToDirectoryIfNecessary( artifact.getFile(), getLibDirectory() );
+
+                if ( copied )
+                {
+                    String name = artifact.getFile().getName();
+                    if ( getLog().isDebugEnabled() )
+                    {
+                        getLog().debug( "Adding " + name + " to modifiedJnlpArtifacts list." );
+                    }
+                    getModifiedJnlpArtifacts().add( name.substring( 0, name.lastIndexOf( '.' ) ) );
+                }
+
+                if ( nativeResource.isOutputVersion() )
+                {
+                    // Create and set a version-less href for this jarResource 
+                    String hrefValue = buildHrefValue( artifact );
+                    nativeResource.setHrefValue( hrefValue );
+                }
+            }
+
+        }
+        catch ( ArtifactResolutionException e )
+        {
+            throw new MojoExecutionException( "Unable to resolve an artifact", e );
+        }
+        catch ( ArtifactNotFoundException e )
+        {
+            throw new MojoExecutionException( "Unable to find an artifact", e );
+        }
+        catch ( IOException e )
+        {
+            throw new MojoExecutionException( "Unable to copy an artifact to the working directory", e );
+        }
+
+    }
+
+    
     /**
      * Creates from the given jar resource the underlying artifact.
      *
-     * @param jarResource the jar resource
+     * @param jnlpResource the jar resource
      * @return the created artifact from the given jar resource
      */
-    private Artifact createArtifact( JarResource jarResource )
+    private Artifact createArtifact( JnlpResource jnlpResource )
     {
 
-        if ( jarResource.getClassifier() == null )
+        if ( jnlpResource.getClassifier() == null )
         {
-            return getArtifactFactory().createArtifact( jarResource.getGroupId(), jarResource.getArtifactId(),
-                                                        jarResource.getVersion(), Artifact.SCOPE_RUNTIME, "jar" );
+            return getArtifactFactory().createArtifact( jnlpResource.getGroupId(), jnlpResource.getArtifactId(),
+                                                        jnlpResource.getVersion(), Artifact.SCOPE_RUNTIME, "jar" );
         }
         else
         {
-            return getArtifactFactory().createArtifactWithClassifier( jarResource.getGroupId(),
-                                                                      jarResource.getArtifactId(),
-                                                                      jarResource.getVersion(), "jar",
-                                                                      jarResource.getClassifier() );
+            return getArtifactFactory().createArtifactWithClassifier( jnlpResource.getGroupId(),
+                                                                      jnlpResource.getArtifactId(),
+                                                                      jnlpResource.getVersion(), "jar",
+                                                                      jnlpResource.getClassifier() );
         }
 
     }
@@ -552,8 +634,8 @@ public class JnlpDownloadServletMojo
         ScopeArtifactFilter artifactFilter = new ScopeArtifactFilter( Artifact.SCOPE_RUNTIME );
 
         ArtifactResolutionResult result =
-            getArtifactResolver().resolveTransitively( jarResourceArtifacts, getProject().getArtifact(), null,
-                                                       //managedVersions
+            getArtifactResolver().resolveTransitively( jarResourceArtifacts, getProject().getArtifact(), 
+                                                      project.getManagedVersionMap(),
                                                        getLocalRepository(), getRemoteRepositories(),
                                                        this.artifactMetadataSource, artifactFilter );
 
@@ -594,7 +676,7 @@ public class JnlpDownloadServletMojo
 
         File jnlpOutputFile = new File( getWorkDirectory(), jnlpFile.getOutputFilename() );
 
-        Set jarResources = new LinkedHashSet();
+        Set<JarResource> jarResources = new LinkedHashSet();
         jarResources.addAll( jnlpFile.getJarResources() );
 
         if ( this.commonJarResources != null && !this.commonJarResources.isEmpty() )
@@ -611,9 +693,12 @@ public class JnlpDownloadServletMojo
 
         JarResourcesGenerator jnlpGenerator =
             new JarResourcesGenerator( getProject(), getTemplateDirectory(), "default-jnlp-servlet-template.vm",
-                                       jnlpOutputFile, jnlpFile.getTemplateFilename(), jarResources,
-                                       jnlpFile.getMainClass(), getWebstartJarURLForVelocity(), libPath, getEncoding() );
+                                       jnlpOutputFile, jnlpFile.getTemplateFilename(), jarResources, jnlpFile.getNativeDependencies(),
+                                       jnlpFile.getMainClass(), getWebstartJarURLForVelocity(), libPath, getEncoding());
 
+        if(jnlpFile.getJ2seVersion() != null) {
+            j2seVersion = jnlpFile.getJ2seVersion();
+        }
         jnlpGenerator.setExtraConfig( getGeneratorExtraConfig() );
 
         try
@@ -649,9 +734,9 @@ public class JnlpDownloadServletMojo
 
             public String getJ2seVersion()
             {
-                return "1.5+";
+                return j2seVersion;
             }
-
+            
             public String getJnlpCodeBase()
             {
                 return getCodebase();
@@ -679,6 +764,9 @@ public class JnlpDownloadServletMojo
         {
             JnlpFile jnlpFile = (JnlpFile) itr.next();
             jarResources.addAll( jnlpFile.getJarResources() );
+            for(NativeDependency nativeDep : jnlpFile.getNativeDependencies()) {
+                jarResources.addAll(nativeDep.getNativeResources());
+            }
         }
 
         if ( this.commonJarResources != null )

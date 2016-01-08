@@ -24,6 +24,8 @@ import junit.framework.TestCase;
 
 import org.apache.maven.project.MavenProject;
 import org.codehaus.mojo.webstart.JarResource;
+import org.codehaus.mojo.webstart.NativeDependency;
+import org.codehaus.mojo.webstart.NativeResource;
 
 /**
  * Tests the {@link JarResourcesGenerator} class.
@@ -34,128 +36,186 @@ import org.codehaus.mojo.webstart.JarResource;
  */
 public class JarResourcesGeneratorTest extends TestCase
 {
-    
+
     public void testGetDependenciesText() throws Exception
     {
-        
-        MavenProject mavenProject = new MavenProject();
+
+		MavenProject mavenProject = new MavenProject();
         File resourceLoaderPath = new File( System.getProperty( "java.io.tmpdir" ) );
         File outputFile = File.createTempFile( "bogus", "jnlp" );
-        outputFile.deleteOnExit();
-        
+		outputFile.deleteOnExit();
+
         File templateFile = File.createTempFile( "bogusTemplate", ".vm" );
-        templateFile.deleteOnExit();
-        
-        List jarResources = new ArrayList();
-        String mainClass = "fully.qualified.ClassName";
-        
-        
-        JarResourcesGenerator generator = new JarResourcesGenerator( mavenProject,
-                                                                     resourceLoaderPath,
-                                                                     "default-jnlp-template.vm",
-                                                                     outputFile,
-                                                                     templateFile.getName(),
-                                                                     jarResources,
-                                                                     mainClass,
-                                                                     "jar:file:/tmp/path/to/webstart-plugin.jar",
-                                                                     null,
-                                                                     "utf-8");
-        
-        //The list of jarResources is empty so the output text should be an empty string
-        assertEquals("", generator.getDependenciesText());
-        
-        //Add some JarResources and confirm the correct output
-        JarResource jarResource1 = buildJarResource( "href1", "1.1", "bogus.Class", true, true );
-        JarResource jarResource2 = buildJarResource( "href2", "1.2", null, true, true );
-        JarResource jarResource3 = buildJarResource( "href3", "1.3", null, false, true );
-        JarResource jarResource4 = buildJarResource( "href4", "1.4", null, false, false );
-        
-        jarResources.add( jarResource1 );
-        jarResources.add( jarResource2 );
-        jarResources.add( jarResource3 );
-        jarResources.add( jarResource4 );
-        
-        
-        String expectedText = "\n<jar href=\"href1\" version=\"1.1\" main=\"true\"/>\n"
-                             + "<jar href=\"href2\" version=\"1.2\"/>\n"
-                             + "<jar href=\"href3\"/>\n";
+		templateFile.deleteOnExit();
 
-        String actualText = generator.getDependenciesText( );
-        
-        Assert.assertEquals( expectedText, actualText );
-        
-        JarResourcesGenerator generator2 = new JarResourcesGenerator( mavenProject,
-                                                                     resourceLoaderPath,
-                                                                     "default-jnlp-template.vm",
-                                                                     outputFile,
-                                                                     templateFile.getName(),
-                                                                     jarResources,
-                                                                     mainClass,
-                                                                     "jar:file:/tmp/path/to/webstart-plugin.jar",
-                                                                     "myLib",
-                                                                     "utf-8");
+		List jarResources = new ArrayList();
+		String mainClass = "fully.qualified.ClassName";
 
-        String expectedText2 = "\n<jar href=\"myLib/href1\" version=\"1.1\" main=\"true\"/>\n"
-                             + "<jar href=\"myLib/href2\" version=\"1.2\"/>\n"
-                             + "<jar href=\"myLib/href3\"/>\n";
+		List nativeDependencies = new ArrayList();
 
-        String actualText2 = generator2.getDependenciesText( );
+		JarResourcesGenerator generator = new JarResourcesGenerator(
+				mavenProject, resourceLoaderPath, "default-jnlp-template.vm",
+				outputFile, templateFile.getName(), jarResources,
+				nativeDependencies, mainClass,
+				"jar:file:/tmp/path/to/webstart-plugin.jar", null, "utf-8");
 
-        Assert.assertEquals( expectedText2, actualText2 );
+		// The list of jarResources is empty so the output text should be an
+		// empty string
+		assertEquals("", generator.getDependenciesText());
 
-    }
-    
-    private JarResource buildJarResource( final String hrefValue,
-                                          final String version, 
-                                          final String mainClass,
-                                          final boolean outputJarVersion,
-                                          final boolean includeInJnlp )
-    {
-        
-        return new JarResource( ) {
+		// Add some JarResources and confirm the correct output
+		JarResource jarResource1 = buildJarResource("href1", "1.1",
+				"bogus.Class", true, true);
+		JarResource jarResource2 = buildJarResource("href2", "1.2", null, true,
+				true);
+		JarResource jarResource3 = buildJarResource("href3", "1.3", null,
+				false, true);
+		JarResource jarResource4 = buildJarResource("href4", "1.4", null,
+				false, false);
 
-            /**
-             * {@inheritDoc}
-             */
+		jarResources.add(jarResource1);
+		jarResources.add(jarResource2);
+		jarResources.add(jarResource3);
+		jarResources.add(jarResource4);
+
+
+		String expectedText = "\n<jar href=\"href1\" version=\"1.1\" main=\"true\"/>\n"
+				+ "<jar href=\"href2\" version=\"1.2\"/>\n"
+				+ "<jar href=\"href3\"/>\n";
+
+		String actualText = generator.getDependenciesText();
+
+		Assert.assertEquals(expectedText, actualText);
+		
+		List linuxResources = new ArrayList();
+		linuxResources.add(buildNativeResource("href2", "1.2","jar", true));
+		
+		List windowsResources = new ArrayList();
+		windowsResources.add(buildNativeResource("href3", "1.3", "nativeLib",true));
+		windowsResources.add(buildNativeResource("href4", "1.4", "jar",true));
+
+		nativeDependencies.add(buildNativeDependency("linux","x86;i386",linuxResources));
+		nativeDependencies.add(buildNativeDependency("windows","x86",windowsResources));
+
+		JarResourcesGenerator generator2 = new JarResourcesGenerator(
+				mavenProject, resourceLoaderPath, "default-jnlp-template.vm",
+				outputFile, templateFile.getName(), jarResources,
+				nativeDependencies, mainClass,
+				"jar:file:/tmp/path/to/webstart-plugin.jar", "myLib", "utf-8");
+
+		String expectedText2 = "\n<jar href=\"myLib/href1\" version=\"1.1\" main=\"true\"/>\n";
+
+		String actualText2 = generator2.getDependenciesText();
+		Assert.assertEquals(expectedText2, actualText2);
+		String expectedNativeText = "\n<resources os=\"linux\" arch=\"x86\">\n<jar href=\"myLib/href2\" version=\"1.2\"/>\n</resources>" +
+				"\n\n<resources os=\"linux\" arch=\"i386\">\n<jar href=\"myLib/href2\" version=\"1.2\"/>\n</resources>\n\n" +
+				"<resources os=\"windows\" arch=\"x86\">\n<nativeLib href=\"myLib/href3\" version=\"1.3\"/>\n<jar href=\"myLib/href4\" version=\"1.4\"/>\n</resources>\n\n";
+		Assert.assertEquals(expectedNativeText, generator2.getNativeDependenciesText());
+
+	}
+
+	private NativeDependency buildNativeDependency(final String os,
+			final String arch, final List nativeResources) {
+		return new NativeDependency() {
+			public String getArch() {
+				return arch;
+			}
+
+			public String getOs() {
+				return os;
+			}
+
+			public List getNativeResources() {
+				return nativeResources;
+			}
+		};
+	}
+
+	private JarResource buildJarResource(final String href,
+			final String jarVersion, final String mainClass,
+			final boolean outputVersion, final boolean includeInJnlp) {
+
+		return new JarResource() {
+
+			/**
+			 * {@inheritDoc}
+			 */
             public String getHrefValue()
             {
                 return hrefValue;
-            }
+			}
 
-            /**
-             * {@inheritDoc}
-             */
+			/**
+			 * {@inheritDoc}
+			 */
             public String getMainClass()
             {
-                return mainClass;
-            }
+				return mainClass;
+			}
 
-            /**
-             * {@inheritDoc}
-             */
+			/**
+			 * {@inheritDoc}
+			 */
             public String getVersion()
             {
                 return version;
-            }
+			}
 
-            /**
-             * {@inheritDoc}
-             */
+			/**
+			 * {@inheritDoc}
+			 */
             public boolean isIncludeInJnlp()
             {
-                return includeInJnlp;
-            }
+				return includeInJnlp;
+			}
 
-            /**
-             * {@inheritDoc}
-             */
-            public boolean isOutputJarVersion()
-            {
-                return outputJarVersion;
-            }
-            
-        };
-        
-    }
+			/**
+			 * {@inheritDoc}
+			 */
+			public boolean isOutputJarVersion()
+                        {
+				return outputVersion;
+			}
+
+		};
+
+	}
+
+	private NativeResource buildNativeResource(final String href,
+			final String resourceVersion,final String resourceType, final boolean outputVersion) {
+
+		return new NativeResource() {
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public String getHrefValue() {
+				return href;
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public String getVersion() {
+				return resourceVersion;
+			}
+
+			/**
+			 * {@inheritDoc}
+			 */
+			public boolean isOutputVersion() {
+				return outputVersion;
+			}
+			
+			/**
+			 * {@inheritDoc}
+			 */
+			public String getResourceType() {
+				return resourceType;
+			}
+
+		};
+
+	}
 
 }

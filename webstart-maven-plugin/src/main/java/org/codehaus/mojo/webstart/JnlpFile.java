@@ -19,6 +19,7 @@ package org.codehaus.mojo.webstart;
  * under the License.
  */
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,7 +41,11 @@ public class JnlpFile
     private List jarResources;
 
     private String mainClass;
-
+    
+    private List<NativeDependency> nativeDependencies = new ArrayList<NativeDependency>();
+    
+    private String j2seVersion;
+    
     /**
      * Creates a new uninitialized {@code JnlpFile}.
      */
@@ -121,5 +126,28 @@ public class JnlpFile
     {
         this.mainClass = mainClass;
     }
+    
+	public List<NativeDependency> getNativeDependencies() {
+		return nativeDependencies;
+	}
 
+	public void setNativeDependencies(List<NativeDependency> nativeDependencies) {
+		this.nativeDependencies = nativeDependencies;
+	}
+
+    /**
+     * @return the j2seVersion
+     */
+    public String getJ2seVersion() {
+	return j2seVersion;
+    }
+
+    /**
+     * @param j2seVersion the j2seVersion to set
+     */
+    public void setJ2seVersion(String j2seVersion) {
+	this.j2seVersion = j2seVersion;
+    }
+
+	
 }

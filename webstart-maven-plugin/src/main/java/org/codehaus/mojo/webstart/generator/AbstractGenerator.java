@@ -225,9 +225,13 @@ public abstract class AbstractGenerator
         context.put( "dependencies", getDependenciesText() );
 
         // Note: properties that contain dots will not be properly parsed by Velocity. 
-        // Should we replace dots with underscores ?        
-        addPropertiesToContext( System.getProperties(), context );
+        // Should we replace dots with underscores ?
+        
+		// Swapped the setting of properties i.e. interpolate maven properties
+		// first and then system. The reason is that maven properties overridden
+		// at execution time using -D do not take effect.
         addPropertiesToContext( mavenProject.getProperties(), context );
+        addPropertiesToContext( System.getProperties(), context );
 
         context.put( "project", mavenProject.getModel() );
         context.put( "jnlpCodebase", extraConfig.getJnlpCodeBase() );
@@ -257,8 +261,12 @@ public abstract class AbstractGenerator
         context.put( "offlineAllowed", Boolean.valueOf( BooleanUtils.toBoolean( extraConfig.getOfflineAllowed() ) ) );
         context.put( "jnlpspec", extraConfig.getJnlpSpec() );
         context.put( "j2seVersion", extraConfig.getJ2seVersion() );
-
+        addExtraContextInfo(context);        
         return context;
+    }
+    
+    protected void addExtraContextInfo(VelocityContext context){
+    	
     }
 
 

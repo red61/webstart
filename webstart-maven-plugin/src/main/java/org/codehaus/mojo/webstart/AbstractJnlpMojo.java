@@ -985,6 +985,11 @@ public abstract class AbstractJnlpMojo
                 return getCodebase();
             }
 
+            public void setJ2seVersion( String version )
+            {
+                throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
+            }
+
         };
     }
 
@@ -1033,6 +1038,11 @@ public abstract class AbstractJnlpMojo
             public String getJnlpCodeBase()
             {
                 return getCodebase();
+            }
+
+            public void setJ2seVersion( String version )
+            {
+                throw new UnsupportedOperationException( "Not supported yet." ); //To change body of generated methods, choose Tools | Templates.
             }
 
         };

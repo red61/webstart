@@ -20,7 +20,7 @@ package org.codehaus.mojo.webstart.generator;
  */
 
 import org.apache.maven.plugin.MojoExecutionException;
-import org.codehaus.mojo.webstart.JarResource;
+import org.codehaus.mojo.webstart.JnlpResource;
 import org.codehaus.plexus.util.WriterFactory;
 
 import java.io.BufferedWriter;
@@ -120,7 +120,7 @@ public class VersionXmlGenerator
         for ( Iterator itr = jarResources.iterator(); itr.hasNext(); )
         {
 
-            JarResource jarResource = (JarResource) itr.next();
+            JnlpResource jarResource = (JnlpResource) itr.next();
             writer.write( "  <resource>" );
             writer.newLine();
             writer.write( "    <pattern>" );
