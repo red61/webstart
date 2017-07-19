@@ -37,13 +37,13 @@ import org.codehaus.plexus.archiver.manager.NoSuchArchiverException;
 import org.codehaus.plexus.logging.AbstractLogEnabled;
 import org.codehaus.plexus.util.FileUtils;
 import org.codehaus.plexus.util.cli.CommandLineException;
-import org.codehaus.plexus.util.cli.StreamConsumer;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import org.apache.maven.shared.utils.cli.StreamConsumer;
 
 /**
  * Default implementation of the {@link SignTool}.
@@ -129,7 +129,7 @@ public class DefaultSignTool
         {
             JarSignerResult result = jarSigner.execute( request );
 
-            CommandLineException exception = result.getExecutionException();
+            org.apache.maven.shared.utils.cli.CommandLineException exception = result.getExecutionException();
             if ( exception != null )
             {
                 throw new MojoExecutionException( "Could not sign jar " + jarFile, exception );
@@ -151,7 +151,7 @@ public class DefaultSignTool
         {
             JarSignerResult result = jarSigner.execute( request );
 
-            CommandLineException exception = result.getExecutionException();
+            org.apache.maven.shared.utils.cli.CommandLineException exception = result.getExecutionException();
             if ( exception != null )
             {
                 throw new MojoExecutionException( "Could not verify jar " + jarFile, exception );
@@ -174,7 +174,7 @@ public class DefaultSignTool
         {
             JarSignerResult result = jarSigner.execute( request );
 
-            CommandLineException exception = result.getExecutionException();
+            org.apache.maven.shared.utils.cli.CommandLineException exception = result.getExecutionException();
             if ( exception != null )
             {
                 throw new MojoExecutionException( "Could not verify jar " + jarFile, exception );
