@@ -124,6 +124,13 @@ public class DefaultSignConfig
      * Optinal max memory to use.
      */
     private String maxMemory;
+    
+    /**
+     * To use tsa location.
+     *
+     * @since 1.0-beta-5
+     */
+    private String tsaLocation;
 
     public void init( File workDirectory, boolean verbose, SignTool signTool )
         throws MojoExecutionException
@@ -158,6 +165,7 @@ public class DefaultSignConfig
         request.setVerbose( isVerbose() );
         request.setArchive( jarToSign );
         request.setSignedjar( signedJar );
+        request.setTsaLocation( getTsaLocation() );
         return request;
     }
 
@@ -299,6 +307,11 @@ public class DefaultSignConfig
     {
         this.verify = verify;
     }
+    
+    public void setTsaLocation( String tsaLocation )
+    {
+        this.tsaLocation = tsaLocation;
+    }
 
     public String getKeystore()
     {
@@ -388,6 +401,11 @@ public class DefaultSignConfig
     public String getMaxMemory()
     {
         return maxMemory;
+    }
+    
+    public String getTsaLocation()
+    {
+        return tsaLocation;
     }
 
     public String getDname()
