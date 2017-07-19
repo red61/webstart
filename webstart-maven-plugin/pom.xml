@@ -8,9 +8,9 @@
 
   <groupId>org.codehaus.mojo</groupId>
   <artifactId>webstart-maven-plugin</artifactId>
-  <version>1.0-beta-3</version>
+  <version>1.0-beta-3.WJT.4</version>
   <packaging>maven-plugin</packaging>
-  <name>MWEBSTART :: Webstart Maven Plugin</name>
+  <name>MWEBSTART :: Webstart Maven Plugin (WJT)</name>
   <description>Maven plugin that supports webstart application development. Helps generate JNLP files and supports the
     JnlpDownloadServlet.
   </description>
@@ -41,7 +41,7 @@
     <dependency>
       <groupId>org.codehaus.mojo</groupId>
       <artifactId>webstart-pack200-api</artifactId>
-      <version>${project.version}</version>
+      <version>${project.parent.version}</version>
     </dependency>
 
     <dependency>
@@ -135,6 +135,11 @@
       <groupId>org.apache.maven</groupId>
       <artifactId>maven-embedder</artifactId>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.14</version>
     </dependency>
 
   </dependencies>
@@ -256,7 +261,7 @@
         <dependency>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>webstart-pack200-impl</artifactId>
-          <version>${project.version}</version>
+          <version>${project.parent.version}</version>
           <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -274,7 +279,7 @@
         <dependency>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>webstart-pack200-impl</artifactId>
-          <version>${project.version}</version>
+          <version>${project.parent.version}</version>
           <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -292,7 +297,7 @@
         <dependency>
           <groupId>org.codehaus.mojo</groupId>
           <artifactId>webstart-pack200-impl</artifactId>
-          <version>${project.version}</version>
+          <version>${project.parent.version}</version>
           <scope>runtime</scope>
         </dependency>
         <dependency>
@@ -311,6 +316,7 @@
       </activation>
       <build>
         <plugins>
+            <!--
           <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-invoker-plugin</artifactId>
@@ -330,6 +336,7 @@
               </execution>
             </executions>
           </plugin>
+          -->
         </plugins>
       </build>
     </profile>
