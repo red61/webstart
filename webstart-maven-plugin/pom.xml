@@ -8,7 +8,7 @@
 
   <groupId>org.codehaus.mojo</groupId>
   <artifactId>webstart-maven-plugin</artifactId>
-  <version>1.0-beta-3.WJT.4</version>
+  <version>1.0-beta-3.WJT.5</version>
   <packaging>maven-plugin</packaging>
   <name>MWEBSTART :: Webstart Maven Plugin (WJT)</name>
   <description>Maven plugin that supports webstart application development. Helps generate JNLP files and supports the
